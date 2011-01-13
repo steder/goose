@@ -5,15 +5,28 @@
    Running migration on an existing db that doesn't have migration_info
    maybe should not create a migration_info table so you're not accidentally
    inserting migration info all over.
-* TODO Database Backup Option
-* TODO Re-order/Re-run database migrations
-* TODO Smarter Algorithm to determine which migrations have been applied
+** TODO Database Backup Option
+** TODO Re-order/Re-run database migrations
+** TODO Smarter Algorithm to determine which migrations have been applied
   Currently we're just doing comparison of migration version vs max
   database migration version.  I'm thinking a set based algorithm
   which takes into account both the version and migration name might
   do a better job of handling changes.
-* TODO Migration_info table should contain a migrationDate 
+** TODO Migration_info table should contain a migrationDate 
   It could be useful to know when a migration was run and if it was 
   in the order you expect.
-
-
+** TODO PostgreSQL Support
+*** Currently some SQL, default ports, etc are MySQL.  Let's
+   add support for more than one DB.  One option is to simply
+   create a PG version of the necessary SQL etc.  
+   Another option is to consider using something like SQLAlchemy
+   to abstract out the database specific stuff. 
+** TODO DSN support (SQLalchemy DSN support?)
+  rather than providing a few different args, one at a time like 
+  $ goose --port X --host Y --dbname Z
+  Let's try a DSN like:
+  $ goose --db=sqlite3://home/<username>/mysqlite.db
+  $ goose --db=psycopg2://mike:password@localhost/mypostgresdb
+  $ goose --db=oursql://mike:password@localhost/mymysqldb
+ 
+ 
