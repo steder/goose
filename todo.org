@@ -1,0 +1,19 @@
+* TODO Typos should probably be errors
+** TODO Don't implicitly create database 
+   Misspelling a database name shouldn't create a new db
+** TODO Don't implicitly insert migration_info
+   Running migration on an existing db that doesn't have migration_info
+   maybe should not create a migration_info table so you're not accidentally
+   inserting migration info all over.
+* TODO Database Backup Option
+* TODO Re-order/Re-run database migrations
+* TODO Smarter Algorithm to determine which migrations have been applied
+  Currently we're just doing comparison of migration version vs max
+  database migration version.  I'm thinking a set based algorithm
+  which takes into account both the version and migration name might
+  do a better job of handling changes.
+* TODO Migration_info table should contain a migrationDate 
+  It could be useful to know when a migration was run and if it was 
+  in the order you expect.
+
+
