@@ -1,7 +1,8 @@
-* TODO Typos should probably be errors
-** TODO Don't implicitly create database 
+* Goose Todo List
+** TODO Typos should probably be errors
+*** TODO Don't implicitly create database 
    Misspelling a database name shouldn't create a new db
-** TODO Don't implicitly insert migration_info
+*** TODO Don't implicitly insert migration_info
    Running migration on an existing db that doesn't have migration_info
    maybe should not create a migration_info table so you're not accidentally
    inserting migration info all over.
@@ -28,5 +29,68 @@
   $ goose --db=sqlite3://home/<username>/mysqlite.db
   $ goose --db=psycopg2://mike:password@localhost/mypostgresdb
   $ goose --db=oursql://mike:password@localhost/mymysqldb
- 
- 
+** TODO reverse migration and python migration support
+  For instance, the yaml file currently looks like:
+
+migrations:
+  - create.sql
+  - track.sql
+
+It could now look like:
+
+migrations:
+  - create.sql, create.lqs.sql
+  - track.sql, track.lqs.sql
+
+It could also include python files:
+
+  - forward.py, reverse.py
+
+** TODO Figure out how to make python migrations work
+
+My initial thought is that you just use subprocess.Popen
+to run the migration file.  To pass database connection
+info to that script you just shove the DSN into the environment
+and then have the script retrieve it from os.environ:
+
+SIMPLE i.e.:
+
+  import os
+  import psycopg2
+  
+  dsn = os.environ["GOOSE_DSN"]
+  
+  connection = psycopg2.connect(dsn)
+  cursor = connection.cursor()
+  cursor.execute()
+  
+The downside of the above is that the transaction boundary is 
+managed by the arbitrary script being run.  I'm thinking that
+you probably don't want to be automatically running complex
+scripts that do all sorts of stuff to all sorts of files and
+data.
+
+Another way we could do it is:
+
+  def forward(cursor):
+      cursor.execute("ALTER TABLE MONKEY ADD COLUMN BANANA INT;")
+
+  def reverse(cursor):
+      pass
+
+This way forces us to dynamically import this python code
+but at least we have an entry point and the goose commandline
+code could be in control of the connection.  These migrations
+could still do arbitrary things and have import side affects
+and stuff so it's still riskier to be doing this with python
+migrations.  
+
+Why do python migrations at all?  I think that although there
+is risk there is real value in integrating some of these
+arbitrary data transforms or load scripts into a cohesive 
+whole.
+
+That said, I think that python migrations are going to have
+to be a lower priority.
+
+
