@@ -103,6 +103,9 @@ ENGINE = InnoDB;"""
         cursor.close()
 
     def runSql(self, migrationName, version):
+        """
+        Given a migration name and version lookup the sql file and run it.
+        """
         sys.stdout.write("Running migration %s to version %s: ..."%(migrationName, version))
         sqlPath = os.path.join(self.migrationDirectory, migrationName)
         sql = open(sqlPath, "r").read()
