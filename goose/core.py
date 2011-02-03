@@ -63,6 +63,9 @@ class DatabaseMigrator(object):
         self.dsn = dsn
         self.session = models.connect(self.dsn)
 
+    def migrationsApplied(self):
+        return self.session.query(models.Migration).all()
+
     def howToMigrate(self, fromVersion, toVersion=None):
         """Given a starting version and an ending version
         returns filenames of all the migrations in that range, exclusive.

@@ -44,15 +44,16 @@ class TestMigration(unittest.TestCase):
         migrationsApplied = self.migrator.migrate(toVersion=2)
         self.assertEqual(migrationsApplied, [])
         self.assertEqual(self.migrator.getVersion(), 2)
-
+        
     def test_migrationFailure(self):
         # here we attempt to migration all the way but our 3rd test
         # migration contains and error so we'll only get to the first 2.
         self.assertRaises(models.OperationalError, self.migrator.migrate)
         self.assertEqual(self.migrator.getVersion(), 2)
-        cursor = self.migrator.session
-        cursor.execute("SELECT * FROM test1;")
-        cursor.execute("SELECT * FROM Track;")
+        migrations = self.migrator.migrationsApplied()
+        for migration in migrations:
+            print migration
+
         migrationsApplied = self.migrator.migrate(toVersion=2)
         self.assertEqual(migrationsApplied, [])
         self.assertEqual(self.migrator.getVersion(), 2)

@@ -42,7 +42,9 @@ class Migration(object):
 from sqlalchemy.orm import mapper
 
 
-mapper(Migration, migration_table)
+mapper(Migration, migration_table,
+       properties={"migrationDate":migration_table.c.migration_date}
+       )
 
 
 from sqlalchemy.orm import sessionmaker
