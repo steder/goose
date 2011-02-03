@@ -1,34 +1,24 @@
-* Goose Todo List
-** TODO Typos should probably be errors
-*** TODO Don't implicitly create database 
-   Misspelling a database name shouldn't create a new db
-*** TODO Don't implicitly insert migration_info
-   Running migration on an existing db that doesn't have migration_info
-   maybe should not create a migration_info table so you're not accidentally
-   inserting migration info all over.
+* [5/11] Goose Todo List
+** DONE PostgreSQL Support
+   Currently some SQL, default ports, etc are MySQL.  Let's
+   add support for more than one DB.  One option is to simply
+   create a PG version of the necessary SQL etc.  
+   Another option is to consider using something like SQLAlchemy
+   to abstract out the database specific stuff. 
+** DONE Run specific migrations (something like goose -r1:2 to run the first to migrations)
 ** TODO Database Backup Option
+** TODO So way to avoid typing the long migration line every time
+   A config file would be one way to do it.  Another way to do it
+   is to provide a subcommand to create a wrapper script with arguments 
+   embedded in it.
+
 ** TODO Re-order/Re-run database migrations
 ** TODO Smarter Algorithm to determine which migrations have been applied
   Currently we're just doing comparison of migration version vs max
   database migration version.  I'm thinking a set based algorithm
   which takes into account both the version and migration name might
   do a better job of handling changes.
-** TODO Migration_info table should contain a migrationDate 
-  It could be useful to know when a migration was run and if it was 
-  in the order you expect.
-** TODO PostgreSQL Support
-*** Currently some SQL, default ports, etc are MySQL.  Let's
-   add support for more than one DB.  One option is to simply
-   create a PG version of the necessary SQL etc.  
-   Another option is to consider using something like SQLAlchemy
-   to abstract out the database specific stuff. 
-** TODO DSN support (SQLalchemy DSN support?)
-  rather than providing a few different args, one at a time like 
-  $ goose --port X --host Y --dbname Z
-  Let's try a DSN like:
-  $ goose --db=sqlite3://home/<username>/mysqlite.db
-  $ goose --db=psycopg2://mike:password@localhost/mypostgresdb
-  $ goose --db=oursql://mike:password@localhost/mymysqldb
+
 ** TODO reverse migration and python migration support
   For instance, the yaml file currently looks like:
 
@@ -93,4 +83,20 @@ whole.
 That said, I think that python migrations are going to have
 to be a lower priority.
 
-
+** DONE Typos should probably be errors
+*** DONE Don't implicitly create database 
+   Misspelling a database name shouldn't create a new db
+*** DONE Don't implicitly insert migration_info
+   Running migration on an existing db that doesn't have migration_info
+   maybe should not create a migration_info table so you're not accidentally
+   inserting migration info all over.
+** DONE Migration_info table should contain a migrationDate 
+  It could be useful to know when a migration was run and if it was 
+  in the order you expect.
+** DONE DSN support (SQLalchemy DSN support?)
+  rather than providing a few different args, one at a time like 
+  $ goose --port X --host Y --dbname Z
+  Let's try a DSN like:
+  $ goose --db=sqlite3://home/<username>/mysqlite.db
+  $ goose --db=psycopg2://mike:password@localhost/mypostgresdb
+  $ goose --db=oursql://mike:password@localhost/mymysqldb

@@ -64,15 +64,25 @@ class DatabaseMigrator(object):
         self.session = models.connect(self.dsn)
 
     def howToMigrate(self, fromVersion, toVersion=None):
-        if toVersion:
-            return self.migrations[fromVersion:toVersion]
-        else:
-            return self.migrations[fromVersion:]
+        """Given a starting version and an ending version
+        returns filenames of all the migrations in that range, exclusive.
 
-    def getVersion(self):
+        e.g.: [fromVersion, toVersion)
+        """
+        # slice notation [start:end:step]
+        # by adding a step of 1 we make a slice from 0:0 be empty
+        # rather than containing the whole list.
+        if toVersion is not None:
+            return self.migrations[fromVersion:toVersion:1]
+        else:
+            return self.migrations[fromVersion::1]
+
+    def getVersion(self, session=None):
+        if session is None:
+            session = self.session
         versionNumber = None
         try:
-            versionNumber = self.session.query(
+            versionNumber = session.query(
                 models.max(models.Migration.version)).scalar()
         except models.OperationalError:
             raise ValueError("Unable to determine version of this database!\n"
@@ -104,12 +114,18 @@ class DatabaseMigrator(object):
         sys.stdout.flush()
         sys.stdout.write("Running migration %s to version %s: SUCCESS!\n"%(migrationName, version))
         
-    def migrate(self):
-        version = self.getVersion()
-        migrations = self.howToMigrate(version)
+    def migrate(self, fromVersion=None, toVersion=None, selectedMigrations=None):
+        if fromVersion is None:
+            version = self.getVersion()
+            fromVersion = version if version is not None else 0
+        if selectedMigrations is not None:
+            migrations = [self.migrations[i] for i in selectedMigrations]
+        else:
+            print "fromVersion, toVersion:", fromVersion, toVersion
+            migrations = self.howToMigrate(fromVersion, toVersion)
+        #import pdb; pdb.set_trace()
         applied = []
-        if version is None:
-            version = 0
+        version = fromVersion
         for migration in migrations:
             version += 1
             self.runSql(migration, version)
@@ -134,16 +150,21 @@ parser.add_argument("-d", "--dsn", dest="dsn", metavar="DSN", type=str,
 parser.add_argument("-m", "--migrations", dest="migrationDirectory", metavar="MIGRATION_DIR", type=str,
                     help="the migration directory containing index.yaml")
 subparsers = parser.add_subparsers(dest="subCommand")
-subparsers.add_parser("init", help="Initialize the database with migration_info table(s)")
-subparsers.add_parser("migrate", help="Apply any outstanding migrations to the database.")
-subparsers.add_parser("list", help="List all applied and outstanding migrations")
+init_parser = subparsers.add_parser("init", help="Initialize the database with migration_info table(s)")
+migrate_parser = subparsers.add_parser("migrate", help="Apply any outstanding migrations to the database.")
+migrate_parser.add_argument("-f", "--from-version", dest="fromVersion", type=int, help="Revision to start migrating from")
+migrate_parser.add_argument("-t", "--to-version", dest="toVersion", type=int, help="Revisiont to migrate to")
+migrate_parser.add_argument("-s", "--select", dest="selectedMigrations", nargs="*", type=int, help="Run selected migrations by giving their index # from index.yaml")
+list_parser = subparsers.add_parser("list", help="List all applied and outstanding migrations")
 
 
-def migrate(migrationDirectory, dsn):
+def migrate(migrationDirectory, dsn,
+            fromVersion=None, toVersion=None,
+            selectedMigrations=None):
     indexFilepath = os.path.join(migrationDirectory, "index.yaml")
     migrator = DatabaseMigrator(indexFilepath)
     migrator.connect(dsn)
-    migrator.migrate()
+    migrator.migrate(fromVersion, toVersion, selectedMigrations)
     
 
 def listMigrations(migrationDirectory, dsn,
@@ -164,7 +185,8 @@ def listMigrations(migrationDirectory, dsn,
 
 
 def initializeDatabase(dsn):
-    models.init(dsn)
+    models.connect(dsn)
+    models.init()
 
 
 def main():
@@ -173,7 +195,13 @@ def main():
     options = parser.parse_args()
     print "subcommand:", options.subCommand
     if options.subCommand == "migrate":
-        migrate(options.migrationDirectory, options.dsn)
+        print options.migrationDirectory
+        print options.dsn
+        print options.selectedMigrations
+        migrate(options.migrationDirectory, options.dsn,
+                fromVersion=options.fromVersion,
+                toVersion=options.toVersion,
+                selectedMigrations=options.selectedMigrations)
     elif options.subCommand == "list":
         listMigrations(options.migrationDirectory, options.dsn)
     elif options.subCommand == "init":

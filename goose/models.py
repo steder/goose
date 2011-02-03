@@ -52,9 +52,7 @@ Session = sessionmaker(autocommit=True,
                        autoflush=False)
 
 
-def init(dsn):
-    engine = create_engine(dsn, echo=True)
-    metadata.bind = engine
+def init():
     metadata.create_all()
 
 
