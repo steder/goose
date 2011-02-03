@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 #-*- mode: python -*-
-"""
-Examples:
-
-  $ goose migrate --user=bob --password=bobspass ~/myproject/somemigrations mydb
-
-  $ goose list --user=bob --password=bobspass ~/myproject/somemigrations mydb
-
-"""
 import sys
 from goose import core
 core.main(sys.argv[1:])
