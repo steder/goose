@@ -1,8 +1,6 @@
 import os
 import unittest
 
-import sqlite3
-
 from goose import core
 from goose import models
 
