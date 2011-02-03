@@ -8,5 +8,6 @@ Examples:
   $ goose list --user=bob --password=bobspass ~/myproject/somemigrations mydb
 
 """
+import sys
 from goose import core
-core.main()
+core.main(sys.argv[1:])

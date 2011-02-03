@@ -39,13 +39,10 @@ class DatabaseMigrator(object):
     """
     """
 
-    def __init__(self, indexFilepath, migrationDirectory=None,
+    def __init__(self, indexFilepath,
                  index=None):
         self.connection = None
-        if not migrationDirectory:
-            self.migrationDirectory = os.path.dirname(indexFilepath)
-        else:
-            self.migrationDirectory = migrationDirectory
+        self.migrationDirectory = os.path.dirname(indexFilepath)
         if not index:
             self.index = yaml.load(open(indexFilepath, "r").read())
         else:
@@ -161,22 +158,28 @@ migrate_parser.add_argument("-s", "--select", dest="selectedMigrations", nargs="
 list_parser = subparsers.add_parser("list", help="List all applied and outstanding migrations")
 
 
+def getMigrator(migrationDirectory):
+    indexFilepath = os.path.join(migrationDirectory, "index.yaml")
+    migrator = DatabaseMigrator(indexFilepath)
+    return migrator
+
+
 def migrate(migrationDirectory, dsn,
             fromVersion=None, toVersion=None,
-            selectedMigrations=None):
-    indexFilepath = os.path.join(migrationDirectory, "index.yaml")
-    migrator = DatabaseMigrator(indexFilepath)
+            selectedMigrations=None, init=False):
+    migrator = getMigrator(migrationDirectory)
     migrator.connect(dsn)
+    if init:
+        models.init()
     migrator.migrate(fromVersion, toVersion, selectedMigrations)
-    
+    return migrator
 
-def listMigrations(migrationDirectory, dsn,
-                   #host, port, username, password, databasename
-                   ):
-    indexFilepath = os.path.join(migrationDirectory, "index.yaml")
-    migrator = DatabaseMigrator(indexFilepath)
-    #migrator.connect(host, int(port), username, password, databasename)
+
+def listMigrations(migrationDirectory, dsn, init=False):
+    migrator = getMigrator(migrationDirectory)
     migrator.connect(dsn)
+    if init:
+        models.init()
     dbVersion = migrator.getVersion()
     print "Applied(*)  VersionNumber  MigrationName"
     for i, migration in enumerate(migrator.migrations):
@@ -185,18 +188,16 @@ def listMigrations(migrationDirectory, dsn,
             print "%-10s  %-13s  %s"%("Y", migrationVersion, migration)
         else:
             print "%-10s  %-13s  %s"%("N ", migrationVersion, migration)
-
-
+            
+            
 def initializeDatabase(dsn):
     models.connect(dsn)
     models.init()
 
 
-def main():
-    #options = GooseOptions()
-    #options.parseOptions()
-    options = parser.parse_args()
-    print "subcommand:", options.subCommand
+def main(args, init=False):
+    print "args:", args
+    options = parser.parse_args(args)
     if options.subCommand == "migrate":
         print options.migrationDirectory
         print options.dsn
@@ -204,9 +205,10 @@ def main():
         migrate(options.migrationDirectory, options.dsn,
                 fromVersion=options.fromVersion,
                 toVersion=options.toVersion,
-                selectedMigrations=options.selectedMigrations)
+                selectedMigrations=options.selectedMigrations,
+                init=init)
     elif options.subCommand == "list":
-        listMigrations(options.migrationDirectory, options.dsn)
+        listMigrations(options.migrationDirectory, options.dsn, init=init)
     elif options.subCommand == "init":
         initializeDatabase(options.dsn)
-        
+    return options

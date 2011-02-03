@@ -56,3 +56,48 @@ class TestMigration(unittest.TestCase):
         self.assertEqual(migrationsApplied, [])
         self.assertEqual(self.migrator.getVersion(), 2)
         
+
+class TestMigrateSubcommandFunction(unittest.TestCase):
+    def setUp(self):
+        migrationDir = os.path.join(core.ROOT, "testmigrations")
+        self.migrator = core.migrate(migrationDir, dbUrl, toVersion=2, init=True)
+
+    def test_migrations(self):
+        self.assertEquals(self.migrator.migrations,
+                          ["create.sql",
+                           "track.sql",
+                           "bad.sql",
+                           "good.sql"])
+
+
+class TestListSubcommandFunction(unittest.TestCase):
+    def test_listMigrations(self):
+        migrationDir = os.path.join(core.ROOT, "testmigrations")
+        core.listMigrations(migrationDir, dbUrl, init=True)
+
+
+class TestInitializeSubcommandFunction(unittest.TestCase):
+    def test(self):
+        models.connect(dbUrl)
+        models.init()
+    
+
+class TestMain(unittest.TestCase):
+    def setUp(self):
+        self.migrationDir = os.path.join(core.ROOT, "testmigrations")
+
+    def test_init(self):
+        args = ["-m", self.migrationDir, "-d", dbUrl, "init"]
+        options = core.main(args)
+        self.assertEquals(options.subCommand, "init")
+
+    def test_list(self):
+        args = ["-m", self.migrationDir, "-d", dbUrl, "list"]
+        options = core.main(args, init=True)
+        self.assertEquals(options.subCommand, "list")
+
+    def test_migrate(self):
+        args = ["-m", self.migrationDir, "-d", dbUrl, "migrate",
+                "-t", "2"]
+        options = core.main(args, init=True)
+        self.assertEquals(options.subCommand, "migrate")
