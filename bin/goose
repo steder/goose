@@ -8,5 +8,5 @@ Examples:
   $ goose list --user=bob --password=bobspass ~/myproject/somemigrations mydb
 
 """
-from goose import goose
-goose.main()
+from goose import core
+core.main()

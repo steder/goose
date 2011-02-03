@@ -1,8 +1,6 @@
-CREATE  TABLE IF NOT EXISTS goosetest.Track (
-  TrackId INT NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (TrackId) )
-ENGINE = InnoDB;
+CREATE  TABLE Track (
+  TrackId INT);
 
--- Just to confirm that multiple sql statements work:
+-- Just to confirm that multiple sql statements (and comments) work:
 
 SELECT * FROM Track;

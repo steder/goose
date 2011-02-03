@@ -1,3 +1,5 @@
 migrations:
  - create.sql
  - track.sql
+ - bad.sql
+ - good.sql
