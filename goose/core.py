@@ -14,7 +14,6 @@ import sys
 import yaml
 
 from goose import models
-print models
 
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
