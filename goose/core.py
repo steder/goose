@@ -196,7 +196,6 @@ def initializeDatabase(dsn):
 
 
 def main(args, init=False):
-    print "args:", args
     options = parser.parse_args(args)
     if options.subCommand == "migrate":
         print options.migrationDirectory
