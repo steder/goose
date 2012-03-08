@@ -1,6 +1,11 @@
+#!/usr/bin/env python
 import os
 
+import distribute_setup
+distribute_setup.use_setuptools()
+
 from setuptools import setup
+
 
 requirements = ["argparse",
                 "pyyaml",
@@ -11,10 +16,12 @@ test_requirements = ["nose",
 
 root = os.path.dirname(__file__)
 
+
 def long_description():
     readme = os.path.join(root, "README.rst")
     long_description = open(readme, "r").read()
     return long_description
+
 
 def version():
     init = os.path.join(root, "goose", "__init__.py")
@@ -24,6 +31,7 @@ def version():
             version = line.split("=")[-1].strip().replace('\"', '')
     assert version is not None, "Unable to determine version!"
     return version
+
 
 setup(name="Goose",
       version=version(),
@@ -39,10 +47,17 @@ setup(name="Goose",
                    'Topic :: Utilities'],
       author='Mike Steder',
       author_email='steder@gmail.com',
-      url='https://bitbucket.org/steder/goose',
-      packages=['goose'],
+      url='https://github.com/steder/goose',
+      packages=['goose',
+                'goose.test',
+                'goose.ftest'],
+      #include_package_data=True,
+      #package_dirs={"goose":"goose"},
+      package_data={"goose":["testmigrations/index.yaml",
+                             ],
+                    },
       scripts=["bin/goose"],
       install_requires=requirements,
       tests_require=test_requirements,
       test_suite="goose",
-     )
+)
