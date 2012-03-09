@@ -1,5 +1,6 @@
 # __init__.py
 
+import json
 import os
 import unittest
 
@@ -42,7 +43,7 @@ class TestDatabaseMigrator(unittest.TestCase):
 
     def test_firstMigration(self):
         self.assertEqual(self.migrator.migrations[0], "create.sql")
-            
+
     def test_secondMigration(self):
         self.assertEqual(self.migrator.migrations[1], "track.sql")
 
@@ -59,7 +60,7 @@ class TestDatabaseMigrator(unittest.TestCase):
         migrations = self.migrator.howToMigrate(0, 2)
         self.assertEqual(migrations, ["create.sql",
                                       "track.sql"])
-        
+
     def test_migrateToVersion1to2(self):
         """Should return the two migrations necessary to reach version 1
         """
@@ -99,6 +100,36 @@ class RecordingCursor(object):
         self.statements.append(query)
 
 
+class TestJsonConfig(unittest.TestCase):
+    def setUp(self):
+        self.config = os.path.join(core.ROOT, "testmigrations",
+                                   "index.json")
+
+    def test_is_valid_json(self):
+        data = None
+        try:
+            with open(self.config, "r") as f:
+                data = json.load(f)
+        except Exception:
+            pass
+        self.assertTrue(data is not None, "Data should be a dictionary")
+
+
+
+
+class TestDatabaseMigratorJSON(TestDatabaseMigrator):
+    """
+    First lets confirm that a json file with the same contents passes
+    the same set of tests.
+
+    This will verify that both the PyYAML parser will parse
+    json documents and then I can test and implement the fallback.
+    """
+    def setUp(self):
+        self.indexFilepath = os.path.join(core.ROOT, "testmigrations", "index.json")
+        self.migrator = core.DatabaseMigrator(self.indexFilepath)
+
+
 class TestExecuteBatch(unittest.TestCase):
     def test_singleStatement(self):
         cursor = RecordingCursor()
@@ -134,6 +165,6 @@ select 3
         self.assertEquals(cursor.statements, ["SELECT 1",
                                               "\nSELECT 2",
                                               "\nselect 3"])
-        
-        
-        
+
+
+
