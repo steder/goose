@@ -4,7 +4,7 @@ import os
 import distribute_setup
 distribute_setup.use_setuptools()
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 requirements = ["argparse",
@@ -48,14 +48,7 @@ setup(name="Goose",
       author='Mike Steder',
       author_email='steder@gmail.com',
       url='https://github.com/steder/goose',
-      packages=['goose',
-                'goose.test',
-                'goose.ftest'],
-      #include_package_data=True,
-      #package_dirs={"goose":"goose"},
-      package_data={"goose":["testmigrations/index.yaml",
-                             ],
-                    },
+      packages=find_packages(),
       scripts=["bin/goose"],
       install_requires=requirements,
       tests_require=test_requirements,
