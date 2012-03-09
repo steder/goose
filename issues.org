@@ -1,0 +1,37 @@
+* TODO: issues from github
+** TODO 9 goose » Templates for Migrations
+0 comments
+by steder 4 days ago
+
+** TODO 8 goose » Structuring Migrations (Removing Monolithic Migrations)
+0 comments
+by steder 4 days ago
+
+** TODO 7 goose » SQL Output for Deployment
+0 comments
+by steder 4 days ago
+
+** TODO 6 goose » There are no examples of altering a table
+0 comments
+by ldanielburr 4 days ago
+
+** TODO 5 goose » Why it gots to be yaml?
+2 comments
+by ldanielburr 4 days ago
+
+
+** DONE 4 goose » Naming
+2 comments
+by steder 4 days ago
+
+** TODO 3 goose » Add reverse migrations
+1 comment
+by steder 4 days ago
+
+** TODO 2 goose » Fail faster on bad migration ranges
+0 comments
+by steder 4 days ago
+
+** DONE 1 goose » Use Distribute / Packaging instead of Setuptools
+1 comment
+by steder 4 days ago
