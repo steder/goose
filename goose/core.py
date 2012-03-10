@@ -7,11 +7,19 @@ on subversion revisions or filename conventions (migration_001.sql, 001_migratio
 
 """
 import argparse # this isn't a stdlib import yet, but it will be in 2.7
+import json
 import os
 import re
 import sys
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    """
+    Unable to import yaml so only json formatted
+    index files will work.
+    """
+
 
 from goose import models
 
@@ -20,12 +28,12 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
 def executeBatch(cursor, sql,
-                  regex=r"(?mx) ([^';]* (?:'[^']*'[^';]*)*)", 
+                  regex=r"(?mx) ([^';]* (?:'[^']*'[^';]*)*)",
                   comment_regex=r"(?mx) (?:^\s*$)|(?:--.*$)"):
     """
     Takes a SQL file and executes it as many separate statements.
 
-    This function is taken from South, 
+    This function is taken from South,
     http://south.aeracode.org/browser/south/db/generic.py
     """
     # First, strip comments
@@ -33,6 +41,12 @@ def executeBatch(cursor, sql,
     # Now execute each statement
     for st in re.split(regex, sql)[1:][::2]:
         cursor.execute(st)
+
+
+def extension(path):
+    name, ext = os.path.splitext(path)
+    ext = ext.lower()
+    return ext
 
 
 class DatabaseMigrator(object):
@@ -44,7 +58,14 @@ class DatabaseMigrator(object):
         self.connection = None
         self.migrationDirectory = os.path.dirname(indexFilepath)
         if not index:
-            self.index = yaml.load(open(indexFilepath, "r").read())
+            ext = extension(indexFilepath)
+            if ext == ".yaml":
+                self.index = yaml.load(open(indexFilepath, "r").read())
+            elif ext == ".json":
+                self.index = json.loads(open(indexFilepath, "r").read())
+            else:
+                raise ValueError("Unsupported index file format: %s\n"
+                                 "Please use 'json' or 'yaml'."%(ext,))
         else:
             self.index = index
         self.migrations = []
@@ -113,7 +134,7 @@ class DatabaseMigrator(object):
         sys.stdout.write("\r")
         sys.stdout.flush()
         sys.stdout.write("Running migration %s to version %s: SUCCESS!\n"%(migrationName, version))
-        
+
     def migrate(self, fromVersion=None, toVersion=None, selectedMigrations=None):
         if fromVersion is None:
             version = self.getVersion()
@@ -188,8 +209,8 @@ def listMigrations(migrationDirectory, dsn, init=False):
             print "%-10s  %-13s  %s"%("Y", migrationVersion, migration)
         else:
             print "%-10s  %-13s  %s"%("N ", migrationVersion, migration)
-            
-            
+
+
 def initializeDatabase(dsn):
     models.connect(dsn)
     models.init()
