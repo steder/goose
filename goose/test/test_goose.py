@@ -137,6 +137,65 @@ class TestExecuteBatch(unittest.TestCase):
         core.executeBatch(cursor, sql)
         self.assertEquals(cursor.statements, ["SELECT 1",])
 
+    def test_mysqlStoredProcDelimiter(self):
+        """Goose should handle stored procedures using the DELIMITER statements
+
+        MySQL uses DELIMITER ;;
+
+        The actual delimiter doesn't actually matter for our use case
+        as any stored proc will be bracketed in its own set of DELIMITER statements.
+
+        And currently executeBatch parses that as "DELIMITER "
+        by consuming all the semicolons.
+
+        """
+        cursor = RecordingCursor()
+        sql = """DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertLog`(
+      _hash char(32),
+      _event char(10),
+      _id int(10),
+      _ip char(15)
+      )
+begin
+   declare sameRow int(1);
+    select count(*) into sameRow from log
+      where  event = _event and ip = _ip and id = _id and `hash` = _hash
+      and TIMESTAMPDIFF(HOUR, dateAdded, now()) < 1;
+    if (sameRow <= 0)  then
+       insert into log (`hash`, event, id, ip) values (_hash, _event, _id, _ip);
+    end if;
+end;;
+DELIMITER ;
+        """
+        core.executeBatch(cursor, sql)
+        self.assertEquals(cursor.statements,
+                          ['\nCREATE DEFINER=`root`@`localhost` PROCEDURE `sp_insertLog`(\n      _hash char(32),\n      _event char(10),\n      _id int(10),\n      _ip char(15)\n      )\nbegin\n   declare sameRow int(1);\n    select count(*) into sameRow from log\n      where  event = _event and ip = _ip and id = _id and `hash` = _hash\n      and TIMESTAMPDIFF(HOUR, dateAdded, now()) < 1;\n    if (sameRow <= 0)  then\n       insert into log (`hash`, event, id, ip) values (_hash, _event, _id, _ip);\n    end if;\nend'])
+
+    def test_postgresqlStoredProc(self):
+        """And of course PGSQL syntax just works...  I miss you PostgreSQL.
+
+        """
+        cursor = RecordingCursor()
+        sql = """
+CREATE FUNCTION add_three_values(v1 anyelement, v2 anyelement, v3 anyelement)
+RETURNS anyelement AS $$
+DECLARE
+    result ALIAS FOR $0;
+BEGIN
+    result := v1 + v2 + v3;
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+        """
+        core.executeBatch(cursor, sql)
+        self.assertEquals(cursor.statements, ['CREATE FUNCTION add_three_values(v1 anyelement, v2 anyelement, v3 anyelement)\nRETURNS anyelement AS $$\nDECLARE\n    result ALIAS FOR $0',
+ '\nBEGIN\n    result := v1 + v2 + v3',
+ '\n    RETURN result',
+ '\nEND',
+ '\n$$ LANGUAGE plpgsql'])
+
+
     def test_twoStatements(self):
         cursor = RecordingCursor()
         sql = """SELECT 1;

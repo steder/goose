@@ -28,19 +28,45 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
 def executeBatch(cursor, sql,
-                  regex=r"(?mx) ([^';]* (?:'[^']*'[^';]*)*)",
-                  comment_regex=r"(?mx) (?:^\s*$)|(?:--.*$)"):
+                 regex=r"(?mx) ([^';]* (?:'[^']*'[^';]*)*)",
+                 comment_regex=r"(?mx) (?:^\s*$)|(?:--.*$)"):
     """
     Takes a SQL file and executes it as many separate statements.
 
-    This function is taken from South,
-    http://south.aeracode.org/browser/south/db/generic.py
+    TODO: replace regexes with something easier to grok and extend.
+
     """
     # First, strip comments
     sql = "\n".join([x.strip().replace("%", "%%") for x in re.split(comment_regex, sql) if x.strip()])
-    # Now execute each statement
+
+    # Stored procedures don't work with the above regex because many of them are
+    # made up multiple sql statements each delimited with a single ;
+    # where the regexes assume each statement delimited by a ; is a complete
+    # statement to send to mysql and execute.
+    #
+    # Here i'm simply checking for the delimiter statements (which seem to be
+    # mysql-only) and then using them as markers to start accumulating statements.
+    # So the first delimiter is the signal to start accumulating
+    # and the second delimiter is the signal to combine them into
+    # single sql compound statement and send it to mysql.
+
+    in_proc = False
+    statements = []
+
     for st in re.split(regex, sql)[1:][::2]:
-        cursor.execute(st)
+        if st.strip().lower().startswith("delimiter"):
+            in_proc = not in_proc
+            if statements and not in_proc:
+                procedure = ";".join(statements)
+                statements = []
+                cursor.execute(procedure)
+            # skip the delimiter line
+            continue
+
+        if in_proc:
+            statements.append(st)
+        else:
+            cursor.execute(st)
 
 
 def extension(path):
