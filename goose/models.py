@@ -1,5 +1,5 @@
 """defines the models and mappers used to work
-with the databases migration table.  
+with the databases migration table.
 
 """
 import datetime
@@ -22,7 +22,7 @@ metadata = MetaData()
 migration_table = Table("migration_info", metadata,
     Column("migration_id", Integer, primary_key=True),
     Column("version", Integer),
-    Column("name", String),
+    Column("name", String(256)),
     Column("migration_date", DateTime, default=func.now(), onupdate=func.now()),
 )
 
@@ -37,7 +37,7 @@ class Migration(object):
     def __repr__(self):
         return "<Migration('%s', '%s', '%s')>"%(
             self.version, self.name, self.migrationDate)
-        
+
 
 from sqlalchemy.orm import mapper
 
@@ -65,4 +65,4 @@ def connect(dsn):
     session = Session()
     return session #, metadata, engine
 
-    
+
